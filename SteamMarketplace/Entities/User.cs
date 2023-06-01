@@ -18,5 +18,7 @@ namespace SteamMarketplace.Entities
         public Dictionary<string, string> Inventory { get; set; }
 
         public Dictionary<string,string> Transaction_History { get; set; }
+
+        public string Status { get; set; }
     }
 }
