@@ -23,7 +23,7 @@ namespace SteamMarketplace
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddMvc();
-           
+           services.a
 
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
