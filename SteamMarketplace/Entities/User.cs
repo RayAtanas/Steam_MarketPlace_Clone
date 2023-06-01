@@ -2,23 +2,31 @@
 
 namespace SteamMarketplace.Entities
 {
-    public class User
+    public class User : BaseEntity
     {
         
-        public string Id { get; set; }
+      
 
-        public string Name { get; set; }
+        public string? FirstName { get; set; }
+
+        public string? LastName { get; set; }
 
         public string Email { get; set; }
 
         public string Password { get; set; }
 
-        public int Wallet { get; set; }
+        public int? Wallet { get; set; }
         
-        public Dictionary<string, string> Inventory { get; set; }
+        public Inventory Inventory { get; set; }
 
-        public Dictionary<string,string> Transaction_History { get; set; }
+        public TransactionHistory Transaction_History { get; set; }
 
-        public string Status { get; set; }
+        public string? Status { get; set; }
+
+        public bool IsBlocked { get; set; }
+
+        public DateTime TimeBlocked { get; set; }
+
+        public int? Attempt { get; set; }
     }
 }
