@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
+using SteamMarketplace.Database;
+using SteamMarketplace.Repository;
+using SteamMarketplace.Services;
 
 namespace SteamMarketplace
 {
@@ -23,8 +26,9 @@ namespace SteamMarketplace
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddMvc();
-           services.a
-
+            services.AddScoped<Context> ();
+            services.AddScoped<UserService>();
+            services.AddScoped<MongoRepository>();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
