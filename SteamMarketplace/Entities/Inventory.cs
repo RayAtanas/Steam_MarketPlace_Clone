@@ -1,6 +1,6 @@
 ﻿namespace SteamMarketplace.Entities
 {
-    public class Inventory
+    public class Inventory : BaseEntity
     {
     }
 }

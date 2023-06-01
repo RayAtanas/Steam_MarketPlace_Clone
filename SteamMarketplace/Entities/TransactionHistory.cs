@@ -1,6 +1,6 @@
 ﻿namespace SteamMarketplace.Entities
 {
-    public class TransactionHistory
+    public class TransactionHistory :BaseEntity
     {
     }
 }
