@@ -27,6 +27,6 @@ namespace SteamMarketplace.Entities
 
         public DateTime TimeBlocked { get; set; }
 
-        public int? Attempt { get; set; }
+        public int Attempt { get; set; }
     }
 }

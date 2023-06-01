@@ -17,7 +17,6 @@ namespace SteamMarketplace.Services
 
         private const int hoursInDay = 24;
 
-    
         public UserService(MongoRepository repository) 
             {
             
@@ -39,7 +38,7 @@ namespace SteamMarketplace.Services
                 {
                     HttpStatus = 404,
 
-                    Message = "Email or Password is incorrect"
+                    Message = "User doesn't exist"
                 };
 
             }
@@ -85,15 +84,15 @@ namespace SteamMarketplace.Services
 
             return new Response()
             {
-                Data = new UserDTO()
+                Data = new User()
                 {
                    
-                    email = userDTO.email,
-                    password = userDTO.password,    
-                    firstname = userDTO.firstname,
-                    lastname = userDTO.lastname,
-                    status = userDTO.status,
-                    wallet  = userDTO.wallet,
+                    Email = userDTO.email,
+                    Password = userDTO.password,    
+                    FirstName = userDTO.firstname,
+                    LastName = userDTO.lastname,
+                    Status = userDTO.status,
+                    Wallet  = userDTO.wallet,
                     
                    
 
@@ -170,10 +169,11 @@ namespace SteamMarketplace.Services
                  
                     newuser.Email, 
                     newuser.Password,
+                    newuser.FirstName,
+                    newuser.LastName,
                     newuser.Wallet,
                     newuser.Status,
-                    newuser.Inventory,
-                    newuser.Transaction_History
+                    
                 }
 
 
@@ -185,9 +185,19 @@ namespace SteamMarketplace.Services
         {
             return new User()
             {
-               Id = Guid.NewGuid().ToString(),
-               Email = userDto.email, 
-               Password = userDto.password
+                Email = userDto.email,
+
+                Password = encryption(userDto.password),
+
+                Id = Guid.NewGuid().ToString(),
+
+                FirstName = userDto.firstname,
+                LastName = userDto.lastname,
+                Wallet = userDto.wallet,
+                Status = userDto.status,
+
+
+                
 
             };
         }
