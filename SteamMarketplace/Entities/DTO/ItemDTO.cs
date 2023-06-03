@@ -14,7 +14,7 @@ namespace SteamMarketplace.Entities.DTO
         public string description { get; set; }
 
         [JsonProperty("reviews")]
-        public Dictionary<User, List<Review>> reviews { get; set; }
+        public Dictionary<User, List<Review>>? reviews { get; set; }
 
         [JsonProperty("paymentState")]
         public string paymentState { get; set; }
