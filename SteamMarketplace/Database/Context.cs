@@ -10,6 +10,7 @@ namespace SteamMarketplace.Database
         private IConfiguration configuration;
 
         public IMongoCollection<User> users { get; }
+        public IMongoCollection<Item> items { get; }
         public Context(IConfiguration configuration)
         {
             this.configuration = configuration;
@@ -23,6 +24,7 @@ namespace SteamMarketplace.Database
            );
 
             users = database.GetCollection<User>("users");
+            items = database.GetCollection<Item>("items");
         }
 
     }
