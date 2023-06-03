@@ -156,7 +156,7 @@ namespace SteamMarketplace.Services
 
 
             User newuser = GetNewuser(userDto);
-            await repository.Create(newuser);
+            await repository.create(newuser);
             return new Response()
             {
                 HttpStatus = 200,
