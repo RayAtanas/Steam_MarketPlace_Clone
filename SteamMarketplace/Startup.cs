@@ -29,6 +29,9 @@ namespace SteamMarketplace
             services.AddScoped<Context> ();
             services.AddScoped<UserService>();
             services.AddScoped<MongoRepository>();
+            services.AddScoped<ItemService>();
+            services.AddScoped<ItemRepository>();
+            services.AddScoped<UserRepository>();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
