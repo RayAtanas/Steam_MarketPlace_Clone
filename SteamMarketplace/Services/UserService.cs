@@ -10,14 +10,14 @@ namespace SteamMarketplace.Services
 {
     public class UserService
     {
-        private MongoRepository repository {  get; }
+        private UserRepository repository {  get; }
 
         private Response response { get; set; }
         private const int attemptLimit = 3;
 
         private const int hoursInDay = 24;
 
-        public UserService(MongoRepository repository) 
+        public UserService(UserRepository repository) 
             {
             
                 this.repository = repository;
@@ -88,14 +88,11 @@ namespace SteamMarketplace.Services
                 {
                    
                     Email = userDTO.email,
-                    Password = userDTO.password,    
+                    Password = loginHashing,    
                     FirstName = userDTO.firstname,
                     LastName = userDTO.lastname,
                     Status = userDTO.status,
                     Wallet  = userDTO.wallet,
-                    
-                   
-
 
                 },
 
@@ -159,7 +156,7 @@ namespace SteamMarketplace.Services
 
 
             User newuser = GetNewuser(userDto);
-            await repository.create(newuser);
+            await repository.Create(newuser);
             return new Response()
             {
                 HttpStatus = 200,
