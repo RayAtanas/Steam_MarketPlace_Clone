@@ -1,48 +1,188 @@
 ﻿using MongoDB.Driver;
 using SteamMarketplace.Entities;
 using SteamMarketplace.Database;
+using NPOI.SS.Formula.Functions;
+using System.Linq.Expressions;
+
 namespace SteamMarketplace.Repository
 {
-    public class MongoRepository
+    public sealed class MongoRepository : IMongoRepository
     {
-        public readonly Context _context;
 
-        public MongoRepository(Context context)
+        private Context context { get; }
+
+        public MongoRepository(Context _context)
         {
-            _context = context;
+            context = _context;
         }
 
-        public async Task create(User user)
+
+        public IMongoCollection<T> GetCollection<T>() where T : BaseEntity
         {
-            await _context.users.InsertOneAsync(user);
+            return context.database.GetCollection<T>(typeof(T).Name);
         }
 
-        public async Task Delete(User user)
+        public async Task CreateAsync<T>(T obj) where T : BaseEntity
         {
-            FilterDefinition<User> query = Builders<User>.Filter.Where(x => x.Id == user.Id);
-
-            await _context.users.DeleteOneAsync(query);
+            await GetCollection<T>().InsertOneAsync(obj);
         }
 
-        public async Task<User> Find(FilterDefinition<User> filter)
+        public async Task CreateManyAsync<T>(List<T> collection) where T : BaseEntity
         {
+            await GetCollection<T>().InsertManyAsync(collection);
+        }
 
-            return (await _context.users.FindAsync<User>(filter)).FirstOrDefault();
+        public async Task<T> FindAsync<T>(Expression<Func<T, bool>> funcExpression)
+            where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            var result = await GetCollection<T>().FindAsync(filter);
+
+            return result.FirstOrDefault();
+        }
+
+        public async Task<T> FindAsync<T>(Expression<Func<T, bool>> funcExpression, ProjectionDefinition<T> FieldsToExclude)
+            where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            var result = await GetCollection<T>()
+                .Find(filter).Project<T>(FieldsToExclude).FirstOrDefaultAsync();
+
+            return result;
+        }
+
+        public async Task<K> FindAsync<T, K>(
+            Expression<Func<T, IEnumerable<K>>> fields,
+            Expression<Func<K, bool>> funcExpression,
+            Expression<Func<T, K>> expression)
+            where T : BaseEntity
+            where K : BaseEntity
+        {
+            var filter = Builders<T>.Filter.ElemMatch(fields, funcExpression);
+
+            return await GetCollection<T>()
+                            .Aggregate()
+                            .Match(filter)
+                            .Project(
+                                Builders<T>.Projection.Expression<K>(expression)
+                        ).FirstOrDefaultAsync();
 
         }
 
-        public async Task<User> Get(string id)
+        public async Task<IEnumerable<T>> FindAllAsync<T>(Expression<Func<T, bool>> funcExpression) where T : BaseEntity
         {
-            FilterDefinition<User> query = Builders<User>.Filter.Where(x => x.Id == id);
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
 
-            return (await _context.users.FindAsync<User>(query)).FirstOrDefault();
+            return await GetCollection<T>()
+                .Find(filter)
+                .ToListAsync();
         }
 
-        public async Task Update(User user)
+        public async Task<IEnumerable<T>> FindAllAsync<T>(Expression<Func<T, bool>> funcExpression, int limit, int skip) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            return await GetCollection<T>()
+                .Find(filter)
+                .Skip(skip)
+                .Limit(limit)
+                .ToListAsync();
+        }
+
+
+        public async Task<IEnumerable<T>> FindAllAsync<T>(Expression<Func<T, bool>> funcExpression, ProjectionDefinition<T> FieldsToExclude) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            return await GetCollection<T>()
+                .Find(filter).Project<T>(FieldsToExclude)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> FindAllAsync<T>(Expression<Func<T, bool>> funcExpression, ProjectionDefinition<T> FieldsToExclude, int limit, int skip) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            return await GetCollection<T>()
+                .Find(filter)
+                .Project<T>(FieldsToExclude)
+                .Skip(skip)
+                .Limit(limit)
+                .ToListAsync();
+        }
+
+
+        public async Task<bool> ReplaceAsync<T>(T collection) where T : BaseEntity
         {
 
-            await _context.users.ReplaceOneAsync(filter: x => x.Id == user.Id, replacement: user);
+            var updatedResult = await GetCollection<T>()
+                .ReplaceOneAsync(filter: x => x.Id == collection.Id, replacement: collection);
+
+            return updatedResult.IsAcknowledged
+                   && updatedResult.ModifiedCount > 0;
 
         }
+
+        public async Task<bool> FindOneAndUpdateAsync<T, K>(
+            Expression<Func<T, bool>> funcExpression,
+            Expression<Func<T, K>> updateExpression, K objToUpdate)
+            where T : BaseEntity
+        {
+            var filter = Builders<T>.Filter.Where(funcExpression);
+
+            var update = Builders<T>.Update.Set(updateExpression, objToUpdate);
+
+            var updatedResult = await GetCollection<T>().UpdateOneAsync(filter, update);
+
+            return updatedResult.IsAcknowledged
+                 && updatedResult.ModifiedCount > 0;
+        }
+
+        public async Task UpdateManyAsync<T>(List<T> collection) where T : BaseEntity
+        {
+            var updates = new List<WriteModel<T>>();
+
+            var filtersBuilder = Builders<T>.Filter;
+
+            foreach (var document in collection)
+            {
+                var filter = filtersBuilder.Where(x => x.Id == document.Id);
+
+                updates.Add(new ReplaceOneModel<T>(filter, document));
+            }
+
+            await GetCollection<T>().BulkWriteAsync(updates);
+        }
+
+       
+
+        public async Task<long> CountAsync<T>(Expression<Func<T, bool>> funcExpression) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            return await GetCollection<T>().CountDocumentsAsync(filter);
+        }
+
+        public async Task DeleteByIdAsync<T>(string id) where T : BaseEntity
+        {
+            await GetCollection<T>().DeleteOneAsync(t => t.Id == id);
+        }
+
+        public async Task DeleteAsync<T>(Expression<Func<T, bool>> funcExpression) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            await GetCollection<T>().DeleteOneAsync(filter);
+        }
+
+        public async Task DeleteManyAsync<T>(Expression<Func<T, bool>> funcExpression) where T : BaseEntity
+        {
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
+
+            await GetCollection<T>().DeleteManyAsync(filter);
+        }
+
     }
 }
