@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using SteamMarketplace.Database;
+using SteamMarketplace.Entities;
+using SteamMarketplace.Entities.Mapper;
 using SteamMarketplace.Repository;
 using SteamMarketplace.Services;
 
@@ -32,6 +35,16 @@ namespace SteamMarketplace
             services.AddScoped<ItemService>();
             services.AddScoped<ItemRepository>();
             services.AddScoped<UserRepository>();
+            services.AddScoped<Item, Item>();
+            services.AddScoped<IMongoRepository, MongoRepository>();
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new ItemMapper());
+            });
+
+            IMapper mapper = mapperConfig.CreateMapper();
+
+            services.AddSingleton(mapper);
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
