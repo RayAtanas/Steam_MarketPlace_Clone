@@ -15,7 +15,7 @@ namespace SteamMarketplace.Services
 
         private ItemRepository repository { get; set; }
         private readonly IMapper mapper;
-        public MongoRepository _mongoRepository;
+        public MongoRepository MongoRepository;
 
         private Response response { get; set; }
 
@@ -25,7 +25,7 @@ namespace SteamMarketplace.Services
         {
             repository = _repository;
             mapper = _mapper;
-            _mongoRepository = mongoRepository;
+            MongoRepository = mongoRepository;
         }
 
         public async Task<Response> CreateItem(ItemDTO itemDTO)
@@ -58,7 +58,7 @@ namespace SteamMarketplace.Services
                     newItem.Title,
                     newItem.Description,
                     newItem.PaymentState,
-                    newItem.Id,
+                    newItem.ItemId,
                     newItem.Type,
                     newItem.Languages,
                     newItem.Developer,
@@ -76,7 +76,7 @@ namespace SteamMarketplace.Services
         {
             return new Item()
             {
-                Id = Guid.NewGuid().ToString(),
+                ItemId = Guid.NewGuid().ToString(),
                 Title = itemDTO.title,
                 Type = itemDTO.type,
                 Description = itemDTO.description,
@@ -93,11 +93,11 @@ namespace SteamMarketplace.Services
         public async Task<Response> GetItemById(string ItemId)
         {
 
-            var items = await _mongoRepository.FindAsync<Item>(c => c.Id == ItemId);
+            FilterDefinition<Item> filter = Builders<Item>.Filter.Eq(item => item.ItemId, ItemId);
 
-            var model = mapper.Map<ItemDTO>(items);
+            var item = await repository.Find(filter);
 
-            if (items == null)
+            if (filter == null)
             {
                 return new Response()
                 {
@@ -111,7 +111,7 @@ namespace SteamMarketplace.Services
             {
                 Message = "success",
                 HttpStatus = (int)HttpStatusCode.OK,
-                Data = model
+                Data = item
 
             };
 
@@ -121,23 +121,12 @@ namespace SteamMarketplace.Services
         {
             try
             {
-                List<Item> items = new(
-               await _mongoRepository.FindAllAsync<Item>(item => item.Title.ToLower().StartsWith(title.ToLower()))
-                 );
+                List<Item> items = new List<Item>(await MongoRepository.FindAllAsync<Item>(item => item.Title.ToLower().StartsWith(title.ToLower())));
+
 
                 List<ItemDTO> model = mapper.Map<List<Item>, List<ItemDTO>>(items);
 
-
-                if (items == null)
-                {
-                    return new Response()
-                    {
-                        HttpStatus = (int)HttpStatusCode.NotFound,
-                        Message = "Item doesn't exist"
-                    };
-                }
-
-                    return new Response()
+                return new Response()
                 {
                     Data = model,
 

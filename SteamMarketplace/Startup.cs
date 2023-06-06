@@ -36,7 +36,7 @@ namespace SteamMarketplace
             services.AddScoped<ItemRepository>();
             services.AddScoped<UserRepository>();
             services.AddScoped<Item, Item>();
-            services.AddScoped<IMongoRepository, MongoRepository>();
+            services.AddScoped<MongoRepository>();
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new ItemMapper());
@@ -45,6 +45,7 @@ namespace SteamMarketplace
             IMapper mapper = mapperConfig.CreateMapper();
 
             services.AddSingleton(mapper);
+            services.AddAutoMapper(typeof(ItemMapper)); 
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
