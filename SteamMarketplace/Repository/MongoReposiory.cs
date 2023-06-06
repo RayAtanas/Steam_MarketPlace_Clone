@@ -33,7 +33,7 @@ namespace SteamMarketplace.Repository
         }
 
         public async Task<T> FindAsync<T>(Expression<Func<T, bool>> funcExpression)
-            where T : BaseEntity
+          where T : BaseEntity
         {
             FilterDefinition<T> filter = Builders<T>.Filter.Where(funcExpression);
 
@@ -112,7 +112,6 @@ namespace SteamMarketplace.Repository
                 .Limit(limit)
                 .ToListAsync();
         }
-
 
         public async Task<bool> ReplaceAsync<T>(T collection) where T : BaseEntity
         {
