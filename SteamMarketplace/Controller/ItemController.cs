@@ -10,10 +10,10 @@ namespace SteamMarketplace.Controller
     [Route("api/v1/ItemService")]
     public class ItemController : ControllerBase
     {
-        private IMongoRepository _mongoRepository;
+        private MongoRepository _mongoRepository;
         private ItemService _itemService;
 
-        public ItemController(ItemService itemService, IMongoRepository mongoRepository )
+        public ItemController(ItemService itemService, MongoRepository mongoRepository )
         {
             _itemService = itemService;
             _mongoRepository = mongoRepository;
