@@ -32,10 +32,13 @@ namespace SteamMarketplace.Entities.DTO
         public string developer { get; set; }
 
         [JsonProperty("price")]
-        public int price { get; set; }
+        public decimal price { get; set; }
 
         [JsonProperty("isPurchased")]
         public bool isPurchased { get; set; }
+
+        [JsonProperty("isavailable")]
+        public bool isavailable { get; set;}
 
         [JsonProperty("realeaseDate")]
         DateTime? realeaseDate { get; set; }
