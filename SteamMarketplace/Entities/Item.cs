@@ -17,6 +17,8 @@
 
         public int Price { get; set; }
     
+        public bool? IsPurchased { get; set; }
+
         public string Publisher { get; set; }
 
         public string Developer { get; set; }

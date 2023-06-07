@@ -34,6 +34,9 @@ namespace SteamMarketplace.Entities.DTO
         [JsonProperty("price")]
         public int price { get; set; }
 
+        [JsonProperty("isPurchased")]
+        public bool isPurchased { get; set; }
+
         [JsonProperty("realeaseDate")]
         DateTime? realeaseDate { get; set; }
 

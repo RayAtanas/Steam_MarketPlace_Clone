@@ -36,7 +36,7 @@ namespace SteamMarketplace
             services.AddScoped<ItemRepository>();
             services.AddScoped<UserRepository>();
             services.AddScoped<Item, Item>();
-            services.AddScoped<MongoRepository>();
+          
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new ItemMapper());
