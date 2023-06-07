@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
+using MongoDB.Bson;
 using MongoDB.Driver;
-using NPOI.SS.Formula.Functions;
 using SteamMarketplace.Entities;
 using SteamMarketplace.Entities.DTO;
 using SteamMarketplace.Entities.Response;
 using SteamMarketplace.Repository;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace SteamMarketplace.Services
 {
@@ -97,7 +98,7 @@ namespace SteamMarketplace.Services
 
             var item = await repository.Find(filter);
 
-            if (filter == null)
+            if (item == null)
             {
                 return new Response()
                 {
@@ -121,14 +122,17 @@ namespace SteamMarketplace.Services
         {
             try
             {
-                List<Item> items = new List<Item>(await MongoRepository.FindAllAsync<Item>(item => item.Title.ToLower().StartsWith(title.ToLower())));
+
+                FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
+                    new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
 
 
-                List<ItemDTO> model = mapper.Map<List<Item>, List<ItemDTO>>(items);
+
+                var item = await repository.Find(filter);
 
                 return new Response()
                 {
-                    Data = model,
+                    Data = item,
 
                     HttpStatus = 200
                 };
@@ -143,6 +147,15 @@ namespace SteamMarketplace.Services
                 };
             }
 
+        }
+
+        public async Task<Response> SelectItem()
+        {
+
+            return new Response
+            {
+                HttpStatus = (int)HttpStatusCode.OK,
+            };
         }
 
     }
