@@ -3,6 +3,7 @@ using SteamMarketplace.Entities.DTO;
 using SteamMarketplace.Entities.Response;
 using SteamMarketplace.Repository;
 using SteamMarketplace.Services;
+using System.Runtime.InteropServices;
 
 namespace SteamMarketplace.Controller
 {
@@ -56,6 +57,17 @@ namespace SteamMarketplace.Controller
             var result = await _itemService.FindItemByName(title);
             return StatusCode(result.HttpStatus, result);
 
+        }
+
+        [HttpPost]
+        [Route("purchaseItem/{title}")]
+
+        public async Task<IActionResult> purchaseItem(
+            string title
+            )
+        {
+            var result = await _itemService.ItemPurchase(title);
+            return StatusCode(result.HttpStatus, result);
         }
     }
 }
