@@ -19,7 +19,7 @@ namespace SteamMarketplace.Entities.DTO
         public string password { get; set; }
 
         [JsonProperty("wallet")]
-        public int? wallet { get; set; }
+        public decimal? wallet { get; set; }
 
        
         [JsonProperty("status")]

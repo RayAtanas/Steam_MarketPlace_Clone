@@ -15,7 +15,7 @@ namespace SteamMarketplace.Entities
 
         public string Password { get; set; }
 
-        public int? Wallet { get; set; }
+        public decimal? Wallet { get; set; }
         
         public Inventory Inventory { get; set; }
 
