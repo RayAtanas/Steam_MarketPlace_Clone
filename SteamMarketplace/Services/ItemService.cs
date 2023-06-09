@@ -13,20 +13,20 @@ namespace SteamMarketplace.Services
     public class ItemService
     {
         private Item Item { get; set; }
-
+        private User User { get; set; }
         private ItemRepository repository { get; set; }
         private readonly IMapper mapper;
-        public MongoRepository MongoRepository;
-
+        public UserRepository userrepository;
+        private Inventory inventory { get; set; }
         private Response response { get; set; }
 
-   
 
-        public ItemService(ItemRepository _repository,IMapper _mapper,MongoRepository mongoRepository)
+
+        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository)
         {
             repository = _repository;
             mapper = _mapper;
-            MongoRepository = mongoRepository;
+            userrepository = _userrepository;
         }
 
         public async Task<Response> CreateItem(ItemDTO itemDTO)
@@ -65,7 +65,7 @@ namespace SteamMarketplace.Services
                     newItem.Developer,
                     newItem.Publisher,
                     newItem.Reviews
-                  
+
 
                 }
 
@@ -86,7 +86,7 @@ namespace SteamMarketplace.Services
                 Languages = itemDTO.languages,
                 Publisher = itemDTO.publisher,
                 Developer = itemDTO.developer,
-               
+
 
 
             };
@@ -149,14 +149,61 @@ namespace SteamMarketplace.Services
 
         }
 
-        public async Task<Response> SelectItem()
+        public async Task<Response> ItemPurchase(string title)
         {
-
-            return new Response
+            try
             {
-                HttpStatus = (int)HttpStatusCode.OK,
-            };
-        }
+                FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
+                    new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
 
+                var item = await repository.Find(filter);
+
+                // Check if the item exists and meets the required conditions
+                if (item != null && item.Isavailable && !item.IsPurchased)
+                {
+                    // Check if the user has enough money in their wallet
+                    if (User.Wallet >= item.Price)
+                    {
+                        // Add the item to the inventory
+                        inventory.items.Add(item.Id, item);
+
+                        // Update the user's wallet
+                        User.Wallet -= item.Price;
+                        await userrepository.Update(User);
+
+                        return new Response()
+                        {
+                            Data = item,
+                            HttpStatus = 200
+                        };
+                    }
+                    else
+                    {
+                        return new Response()
+                        {
+                            Message = "Insufficient funds in the user's wallet.",
+                            HttpStatus = (int)HttpStatusCode.BadRequest
+                        };
+                    }
+                }
+                else
+                {
+                    return new Response()
+                    {
+                        Message = "Item not found or it is not available for purchase.",
+                        HttpStatus = (int)HttpStatusCode.NotFound
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new Response()
+                {
+                    Message = e.Message,
+                    HttpStatus = (int)HttpStatusCode.InternalServerError
+                };
+            }
+
+        }
     }
- }
+   }
