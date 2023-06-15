@@ -21,6 +21,9 @@ namespace SteamMarketplace.Entities.DTO
         [JsonProperty("wallet")]
         public decimal? wallet { get; set; }
 
+        [JsonProperty("inventory")]
+        public Dictionary<string,Item>? inventory { get; set; }
+        
        
         [JsonProperty("status")]
         public string? status { get; set; }

@@ -17,7 +17,7 @@ namespace SteamMarketplace.Entities
 
         public decimal? Wallet { get; set; }
         
-        public Inventory Inventory { get; set; }
+        public Dictionary<string, Item>? Inventory { get; set; }
 
         public TransactionHistory Transaction_History { get; set; }
 
