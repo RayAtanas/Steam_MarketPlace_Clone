@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using SteamMarketplace.Database;
 using SteamMarketplace.Entities;
 using SteamMarketplace.Entities.Mapper;
 using SteamMarketplace.Repository;
 using SteamMarketplace.Services;
+using System.Text;
 
 namespace SteamMarketplace
 {
@@ -21,7 +24,23 @@ namespace SteamMarketplace
         }
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "your_issuer",
+                    ValidAudience = "your_audience",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+                };
+            });
 
             services.AddControllers().AddNewtonsoftJson(options =>
             {

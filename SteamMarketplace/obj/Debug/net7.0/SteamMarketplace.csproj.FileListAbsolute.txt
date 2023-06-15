@@ -44,3 +44,12 @@ D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\ZstdSharp.dll
 D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\runtimes\linux\native\libmongocrypt.so
 D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\runtimes\osx\native\libmongocrypt.dylib
 D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\runtimes\win\native\mongocrypt.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\IdentityModel.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.Abstractions.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.Logging.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\Microsoft.IdentityModel.Tokens.dll
+D:\Personal\Steam_Marketplace\SteamMarketplace\bin\Debug\net7.0\System.IdentityModel.Tokens.Jwt.dll
