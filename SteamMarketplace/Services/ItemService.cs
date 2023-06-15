@@ -162,11 +162,12 @@ namespace SteamMarketplace.Services
                 if (item != null && item.Isavailable && !item.IsPurchased)
                 {
                   
-               
-              
-                        User.Inventory.Add(item.Id, item);
+                    if (User.Wallet >= item.Price)
+                    {
+                        // Add the item to the inventory
+                        inventory.items.Add(item.Id, item);
 
-            
+                        // Update the user's wallet
                         User.Wallet -= item.Price;
                         await userrepository.Update(User);
 
@@ -175,8 +176,15 @@ namespace SteamMarketplace.Services
                             Data = item,
                             HttpStatus = 200
                         };
-                    
-                   
+                    }
+                    else
+                    {
+                        return new Response()
+                        {
+                            Message = "Insufficient funds in the user's wallet.",
+                            HttpStatus = (int)HttpStatusCode.BadRequest
+                        };
+                    }
                 }
                 else
                 {
