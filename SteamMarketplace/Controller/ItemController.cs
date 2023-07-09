@@ -1,9 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using SteamMarketplace.Entities.DTO;
 using SteamMarketplace.Entities.Response;
 using SteamMarketplace.Repository;
 using SteamMarketplace.Services;
+using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+
 
 namespace SteamMarketplace.Controller
 {
@@ -13,13 +20,22 @@ namespace SteamMarketplace.Controller
     {
         private MongoRepository _mongoRepository;
         private ItemService _itemService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private HttpContext HttpContext => _httpContextAccessor.HttpContext;
 
-        public ItemController(ItemService itemService, MongoRepository mongoRepository )
+        private readonly IActionContextAccessor _actionContextAccessor;
+
+        public ItemController(
+            ItemService itemService,
+            MongoRepository mongoRepository,
+            IHttpContextAccessor httpContextAccessor,
+            IActionContextAccessor actionContextAccessor)
         {
             _itemService = itemService;
             _mongoRepository = mongoRepository;
+            _httpContextAccessor = httpContextAccessor;
+            _actionContextAccessor = actionContextAccessor;
         }
-       
 
 
         [HttpPost]
@@ -61,13 +77,34 @@ namespace SteamMarketplace.Controller
 
         [HttpPost]
         [Route("purchaseItem/{title}")]
+        [Authorize]
 
-        public async Task<IActionResult> purchaseItem(
-            string title
-            )
+        public async Task<Response> ItemPurchase(string title, [FromHeader] string authorization)
         {
-            var result = await _itemService.ItemPurchase(title);
-            return StatusCode(result.HttpStatus, result);
+            try
+            {
+                var userEmail = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+                var response = await _itemService.ItemPurchase(title, userEmail,  authorization,  HttpContext);
+
+                return new Response
+                {
+                    Data = response.Data,
+                    Message = response.Message,
+                    HttpStatus = response.HttpStatus
+                };
+            }
+            catch (Exception e)
+            {
+                // Log and handle the exception
+                Console.WriteLine(e.ToString());
+
+                return new Response()
+                {
+                    Message = e.Message,
+                    HttpStatus = (int)HttpStatusCode.InternalServerError
+                };
+            }
         }
     }
-}
+    }

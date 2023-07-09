@@ -1,11 +1,17 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SteamMarketplace.Entities;
 using SteamMarketplace.Entities.DTO;
 using SteamMarketplace.Entities.Response;
 using SteamMarketplace.Repository;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SteamMarketplace.Services
@@ -21,12 +27,13 @@ namespace SteamMarketplace.Services
         private Response response { get; set; }
 
 
-
-        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository)
+        private readonly SymmetricSecurityKey _secretkey;
+        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository, SymmetricSecurityKey secretkey)
         {
             repository = _repository;
             mapper = _mapper;
             userrepository = _userrepository;
+            _secretkey = secretkey;
         }
 
         public async Task<Response> CreateItem(ItemDTO itemDTO)
@@ -149,61 +156,86 @@ namespace SteamMarketplace.Services
 
         }
 
-        public async Task<Response> ItemPurchase(string title)
+        public async Task<Response> ItemPurchase(string title,string userEmail, [FromHeader] string authorization, HttpContext httpContext)
         {
             try
             {
-                FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
-                    new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
 
-                var item = await repository.Find(filter);
+               
+                var user = await userrepository.Get(userEmail);
 
-              
-                if (item != null && item.Isavailable && !item.IsPurchased)
+                if (user == null)
+        {
+            return new Response()
+            {
+                Message = "User not found.",
+                HttpStatus = (int)HttpStatusCode.NotFound
+            };
+        }
+
+        
+        FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
+            new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
+        var item = await repository.Find(filter);
+
+        if (item != null && item.Isavailable && !item.IsPurchased)
+        {
+            if (user.Wallet >= item.Price)
+            {
+                // Add the item to the inventory
+                inventory.items.Add(item.Id, item);
+
+                // Update the user's wallet
+                user.Wallet -= item.Price;
+                await userrepository.Update(user);
+
+                // Mark the item as purchased
+                item.IsPurchased = true;
+                await repository.Update(item);
+
+                // Remove the purchased item from the inventory
+                inventory.items.Remove(item.Id);
+
+                return new Response()
                 {
-                  
-                    if (User.Wallet >= item.Price)
-                    {
-                        // Add the item to the inventory
-                        inventory.items.Add(item.Id, item);
-
-                        // Update the user's wallet
-                        User.Wallet -= item.Price;
-                        await userrepository.Update(User);
-
-                        return new Response()
-                        {
-                            Data = item,
-                            HttpStatus = 200
-                        };
-                    }
-                    else
-                    {
-                        return new Response()
-                        {
-                            Message = "Insufficient funds in the user's wallet.",
-                            HttpStatus = (int)HttpStatusCode.BadRequest
-                        };
-                    }
-                }
-                else
-                {
-                    return new Response()
-                    {
-                        Message = "Item not found or it is not available for purchase.",
-                        HttpStatus = (int)HttpStatusCode.NotFound
-                    };
-                }
+                    Data = item,
+                    HttpStatus = 200
+                };
             }
-            catch (Exception e)
+            else
             {
                 return new Response()
                 {
-                    Message = e.Message,
-                    HttpStatus = (int)HttpStatusCode.InternalServerError
+                    Message = "Insufficient funds in the user's wallet.",
+                    HttpStatus = (int)HttpStatusCode.BadRequest
                 };
             }
-
+        }
+        else
+        {
+            return new Response()
+            {
+                Message = "Item not found or it is not available for purchase.",
+                HttpStatus = (int)HttpStatusCode.NotFound
+            };
         }
     }
-   }
+    catch (Exception e)
+    {
+        // Log the exception
+        Console.WriteLine(e.ToString());
+
+        return new Response()
+        {
+            Message = e.Message,
+            HttpStatus = (int)HttpStatusCode.InternalServerError
+        };
+        }
+      }
+
+
+
+
+    }
+}
+    
