@@ -9,7 +9,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
+
+
 
 namespace SteamMarketplace.Controller
 {
@@ -17,32 +18,27 @@ namespace SteamMarketplace.Controller
     [Route("api/v1/loginService")]
     public class UserController : ControllerBase
     {
+        private readonly SymmetricSecurityKey _secretkey;
         private UserService _loginService;
 
-        public UserController(UserService loginService)
+        public UserController(UserService loginService,SymmetricSecurityKey secretkey)
         {
             _loginService = loginService;
+            _secretkey = secretkey;
         }
-        /* [HttpGet("{id}")]
-
-         public async Task<ActionResult> GetUsers(string id) 
-         {
-
-         }
-        */
+        
 
         [HttpPost]
         [Route("login")]
-        public async Task<Response> login([FromBody] UserDTO userDto)
+
+        public async Task<Response> Login([FromBody] UserDTO userDto)
         {
             var response = await _loginService.Usercheck(userDto);
 
             if (response.HttpStatus != (int)HttpStatusCode.OK)
             {
-                // User does not exist or login failed
                 return new Response
                 {
-                    Data = null,
                     HttpStatus = response.HttpStatus,
                     Message = response.Message
                 };
@@ -51,27 +47,23 @@ namespace SteamMarketplace.Controller
             var claims = new[]
             {
         new Claim(ClaimTypes.Name, userDto.email),
-        // Add more claims if needed
     };
 
-            // Generate a 256-bit (32-byte) key
-            var keyBytes = new byte[32];
-            using (var rng = new RNGCryptoServiceProvider())
-            {
-                rng.GetBytes(keyBytes);
-            }
+            var signingCredentials = new SigningCredentials(_secretkey, SecurityAlgorithms.HmacSha256);
 
-            var key = new SymmetricSecurityKey(keyBytes);
+            var header = new JwtHeader(signingCredentials);
+            var payload = new JwtPayload
+    {
+        { "iss", "User.authservice" },
+        { "aud", "SteamMarketplace.api" },
+        { "sub", userDto.email },
+        { "exp", DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds() }
+    };
 
-            var token = new JwtSecurityToken(
-                "your_issuer",
-                "your_audience",
-                claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
-            );
+            var jwtToken = new JwtSecurityToken(header, payload);
 
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            var jwtHandler = new JwtSecurityTokenHandler();
+            var tokenString = jwtHandler.WriteToken(jwtToken);
 
             return new Response
             {
@@ -79,14 +71,6 @@ namespace SteamMarketplace.Controller
                 HttpStatus = (int)HttpStatusCode.OK
             };
         }
-
-
-        // Return the error response if login is unsuccessful
-
-
-
-
-
 
 
 
