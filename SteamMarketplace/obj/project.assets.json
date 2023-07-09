@@ -1949,6 +1949,7 @@
       "IdentityModel >= 6.1.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 7.0.7",
       "Microsoft.AspNetCore.Mvc.NewtonsoftJson >= 7.0.5",
+      "Microsoft.IdentityModel.Tokens >= 6.31.0",
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets >= 1.17.2",
       "MongoDB.Bson >= 2.19.2",
       "MongoDB.Driver >= 2.19.2",
@@ -1959,7 +1960,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Ray Atanas\\.nuget\\packages\\": {},
+    "C:\\Users\\RayAtanas\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -1968,14 +1969,14 @@
       "projectUniqueName": "D:\\Personal\\Steam_Marketplace\\SteamMarketplace\\SteamMarketplace.csproj",
       "projectName": "SteamMarketplace",
       "projectPath": "D:\\Personal\\Steam_Marketplace\\SteamMarketplace\\SteamMarketplace.csproj",
-      "packagesPath": "C:\\Users\\Ray Atanas\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\RayAtanas\\.nuget\\packages\\",
       "outputPath": "D:\\Personal\\Steam_Marketplace\\SteamMarketplace\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Ray Atanas\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\RayAtanas\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2021,6 +2022,10 @@
           "Microsoft.AspNetCore.Mvc.NewtonsoftJson": {
             "target": "Package",
             "version": "[7.0.5, )"
+          },
+          "Microsoft.IdentityModel.Tokens": {
+            "target": "Package",
+            "version": "[6.31.0, )"
           },
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
             "target": "Package",
