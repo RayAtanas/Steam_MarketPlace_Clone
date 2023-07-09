@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using SteamMarketplace.Database;
@@ -8,7 +10,9 @@ using SteamMarketplace.Entities;
 using SteamMarketplace.Entities.Mapper;
 using SteamMarketplace.Repository;
 using SteamMarketplace.Services;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace SteamMarketplace
 {
@@ -24,6 +28,14 @@ namespace SteamMarketplace
         }
         public void ConfigureServices(IServiceCollection services)
         {
+
+            var secretKeyBytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(secretKeyBytes);
+            }
+            var secretKey = new SymmetricSecurityKey(secretKeyBytes);
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -36,11 +48,20 @@ namespace SteamMarketplace
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = "your_issuer",
-                    ValidAudience = "your_audience",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+                    ValidIssuer = "User.authservice",
+                    ValidAudience = "SteamMarketplace.api",
+                    IssuerSigningKey = secretKey
                 };
             });
+
+
+
+            services.AddSingleton(secretKey);
+            services.AddHttpContextAccessor();
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
+
+
 
             services.AddControllers().AddNewtonsoftJson(options =>
             {
@@ -68,10 +89,11 @@ namespace SteamMarketplace
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-
+            IdentityModelEventSource.ShowPII = true;
             // app.UseHttpsRedirection();
             //  app.UseStaticFiles();
             app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
             // app.MapRazorPages();
             app.UseEndpoints(endpoints =>
