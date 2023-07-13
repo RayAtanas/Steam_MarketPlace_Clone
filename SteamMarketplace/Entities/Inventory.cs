@@ -4,6 +4,6 @@
     {
         public bool IsPrivate { get; set; }
 
-        public Dictionary<string,Item> items { get; set; }
+        public Dictionary<string, Item> items { get; set; } = new Dictionary<string, Item>();
     }
 }
