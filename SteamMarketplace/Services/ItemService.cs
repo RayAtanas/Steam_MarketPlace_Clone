@@ -28,7 +28,7 @@ namespace SteamMarketplace.Services
 
 
         private readonly SymmetricSecurityKey _secretkey;
-        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository, SymmetricSecurityKey secretkey,Inventory inventory)
+        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository, SymmetricSecurityKey secretkey, Inventory inventory)
         {
             repository = _repository;
             mapper = _mapper;
@@ -157,86 +157,122 @@ namespace SteamMarketplace.Services
 
         }
 
-        public async Task<Response> ItemPurchase(string title,string userEmail, [FromHeader] string authorization)
+        public async Task<Response> ItemPurchase(string title, string userEmail, [FromHeader] string authorization)
         {
             try
             {
 
 
-                var user = await userrepository.FindByEmail(userEmail);
+                
 
-                if (user == null)
-        {
-            return new Response()
+
+                    var user = await userrepository.FindByEmail(userEmail);
+
+                    if (user == null)
+                    {
+                        return new Response()
+                        {
+                            Message = "User not found.",
+                            HttpStatus = (int)HttpStatusCode.NotFound
+                        };
+                    }
+
+
+                FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
+                                    new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
+
+                var item = await repository.Find(filter);
+
+               
+
+                if (item != null && item.Isavailable && !item.IsPurchased)
+                {
+                    if (user.Wallet >= item.Price)
+                    {
+                        
+                        _inventory.items.Add(item.Id, item);
+
+
+
+
+                        if (user.Inventory == null)
+                        {
+                            user.Inventory = new Dictionary<string, Item>();
+                        }
+                       
+                        try
+                        {
+                            if (user.Inventory.ContainsKey(item.Id))
+                            {
+                                return new Response()
+                                {
+
+                                    Message = "Item Already Exist.",
+                                    HttpStatus = (int)HttpStatusCode.OK
+
+                                };
+                            }
+                            else
+                            {
+                                user.Wallet -= item.Price;
+
+                                await userrepository.Update(user);
+
+                                user.Inventory.Add(item.ItemId, item);
+
+                                await userrepository.Update(user);
+                            }
+                            
+                            }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+
+
+
+                        _inventory.items.Remove(item.Id);
+
+                        return new Response()
+                        {
+                            Data = item,
+                            HttpStatus = 200
+                        };
+                    }
+                    else
+                    {
+                        return new Response()
+                        {
+                            Message = "Insufficient funds in the user's wallet.",
+                            HttpStatus = (int)HttpStatusCode.BadRequest
+                        };
+                    }
+                }
+                else
+                {
+                    return new Response()
+                    {
+                        Message = "Item not found or it is not available for purchase.",
+                        HttpStatus = (int)HttpStatusCode.NotFound
+                    };
+                }
+            }
+            catch (Exception e)
             {
-                Message = "User not found.",
-                HttpStatus = (int)HttpStatusCode.NotFound
-            };
-        }
-
-        
-        FilterDefinition<Item> filter = Builders<Item>.Filter.Regex(item => item.Title,
-            new BsonRegularExpression($"^{Regex.Escape(title)}", "i"));
-        var item = await repository.Find(filter);
-
-        if (item != null && item.Isavailable && !item.IsPurchased)
-        {
-            if (user.Wallet >= item.Price)
-            {
-                // Add the item to the inventory
-                _inventory.items.Add(item.Id, item);
-
-                // Update the user's wallet
-                user.Wallet -= item.Price;
-                await userrepository.Update(user);
-
-                // Mark the item as purchased
-                item.IsPurchased = true;
-                await repository.Update(item);
-
-                // Remove the purchased item from the inventory
-                _inventory.items.Remove(item.Id);
+                
+                Console.WriteLine(e.ToString());
 
                 return new Response()
                 {
-                    Data = item,
-                    HttpStatus = 200
-                };
-            }
-            else
-            {
-                return new Response()
-                {
-                    Message = "Insufficient funds in the user's wallet.",
-                    HttpStatus = (int)HttpStatusCode.BadRequest
+                    Message = e.Message,
+                    HttpStatus = (int)HttpStatusCode.InternalServerError
                 };
             }
         }
-        else
-        {
-            return new Response()
-            {
-                Message = "Item not found or it is not available for purchase.",
-                HttpStatus = (int)HttpStatusCode.NotFound
-            };
-        }
-    }
-    catch (Exception e)
-    {
-        // Log the exception
-        Console.WriteLine(e.ToString());
-
-        return new Response()
-        {
-            Message = e.Message,
-            HttpStatus = (int)HttpStatusCode.InternalServerError
-        };
-        }
-      }
 
 
 
 
     }
 }
-    
+
