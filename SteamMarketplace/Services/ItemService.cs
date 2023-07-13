@@ -23,17 +23,18 @@ namespace SteamMarketplace.Services
         private ItemRepository repository { get; set; }
         private readonly IMapper mapper;
         public UserRepository userrepository;
-        private Inventory inventory { get; set; }
+        private Inventory _inventory { get; set; }
         private Response response { get; set; }
 
 
         private readonly SymmetricSecurityKey _secretkey;
-        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository, SymmetricSecurityKey secretkey)
+        public ItemService(ItemRepository _repository, IMapper _mapper, UserRepository _userrepository, SymmetricSecurityKey secretkey,Inventory inventory)
         {
             repository = _repository;
             mapper = _mapper;
             userrepository = _userrepository;
             _secretkey = secretkey;
+            _inventory = inventory;
         }
 
         public async Task<Response> CreateItem(ItemDTO itemDTO)
@@ -156,13 +157,13 @@ namespace SteamMarketplace.Services
 
         }
 
-        public async Task<Response> ItemPurchase(string title,string userEmail, [FromHeader] string authorization, HttpContext httpContext)
+        public async Task<Response> ItemPurchase(string title,string userEmail, [FromHeader] string authorization)
         {
             try
             {
 
-               
-                var user = await userrepository.Get(userEmail);
+
+                var user = await userrepository.FindByEmail(userEmail);
 
                 if (user == null)
         {
@@ -183,7 +184,7 @@ namespace SteamMarketplace.Services
             if (user.Wallet >= item.Price)
             {
                 // Add the item to the inventory
-                inventory.items.Add(item.Id, item);
+                _inventory.items.Add(item.Id, item);
 
                 // Update the user's wallet
                 user.Wallet -= item.Price;
@@ -194,7 +195,7 @@ namespace SteamMarketplace.Services
                 await repository.Update(item);
 
                 // Remove the purchased item from the inventory
-                inventory.items.Remove(item.Id);
+                _inventory.items.Remove(item.Id);
 
                 return new Response()
                 {

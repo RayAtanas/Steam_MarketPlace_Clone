@@ -44,10 +44,12 @@ namespace SteamMarketplace.Controller
                 };
             }
 
-            var claims = new[]
-            {
-        new Claim(ClaimTypes.Name, userDto.email),
-    };
+          var claims = new[]
+{
+    new Claim(ClaimTypes.NameIdentifier, userDto.email), 
+    new Claim(ClaimTypes.Name, userDto.email),
+};
+
 
             var signingCredentials = new SigningCredentials(_secretkey, SecurityAlgorithms.HmacSha256);
 
@@ -56,7 +58,7 @@ namespace SteamMarketplace.Controller
     {
         { "iss", "User.authservice" },
         { "aud", "SteamMarketplace.api" },
-        { "sub", userDto.email },
+        { "email", userDto.email },
         { "exp", DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds() }
     };
 
