@@ -21,12 +21,12 @@ namespace SteamMarketplace.Controller
         private readonly SymmetricSecurityKey _secretkey;
         private UserService _loginService;
 
-        public UserController(UserService loginService,SymmetricSecurityKey secretkey)
+        public UserController(UserService loginService, SymmetricSecurityKey secretkey)
         {
             _loginService = loginService;
             _secretkey = secretkey;
         }
-        
+
 
         [HttpPost]
         [Route("login")]
@@ -44,9 +44,9 @@ namespace SteamMarketplace.Controller
                 };
             }
 
-          var claims = new[]
-{
-    new Claim(ClaimTypes.NameIdentifier, userDto.email), 
+            var claims = new[]
+  {
+    new Claim(ClaimTypes.NameIdentifier, userDto.email),
     new Claim(ClaimTypes.Name, userDto.email),
 };
 

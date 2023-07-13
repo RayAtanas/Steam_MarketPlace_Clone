@@ -74,7 +74,7 @@ namespace SteamMarketplace
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddMvc();
-            services.AddScoped<Context> ();
+            services.AddScoped<Context>();
             services.AddScoped<UserService>();
             services.AddScoped<MongoRepository>();
             services.AddScoped<ItemService>();
@@ -94,7 +94,7 @@ namespace SteamMarketplace
             IMapper mapper = mapperConfig.CreateMapper();
 
             services.AddSingleton(mapper);
-            services.AddAutoMapper(typeof(ItemMapper)); 
+            services.AddAutoMapper(typeof(ItemMapper));
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

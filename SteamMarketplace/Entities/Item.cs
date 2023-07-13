@@ -1,7 +1,10 @@
-﻿namespace SteamMarketplace.Entities
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace SteamMarketplace.Entities
 {
     public class Item : BaseEntity
     {
+        
         public string ItemId { get; set; }
         public string Type { get; set; }
       
