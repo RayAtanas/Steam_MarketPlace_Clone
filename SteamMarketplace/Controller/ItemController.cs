@@ -10,7 +10,9 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 namespace SteamMarketplace.Controller
 {
@@ -20,21 +22,23 @@ namespace SteamMarketplace.Controller
     {
         private MongoRepository _mongoRepository;
         private ItemService _itemService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private HttpContext HttpContext => _httpContextAccessor.HttpContext;
+        private readonly JwtSecurityTokenHandler _tokenHandler;
+        private readonly SymmetricSecurityKey _secretkey;
 
-        private readonly IActionContextAccessor _actionContextAccessor;
+
 
         public ItemController(
             ItemService itemService,
             MongoRepository mongoRepository,
-            IHttpContextAccessor httpContextAccessor,
-            IActionContextAccessor actionContextAccessor)
+            JwtSecurityTokenHandler tokenHandler,
+            SymmetricSecurityKey secretkey
+
+            )
         {
             _itemService = itemService;
             _mongoRepository = mongoRepository;
-            _httpContextAccessor = httpContextAccessor;
-            _actionContextAccessor = actionContextAccessor;
+            _tokenHandler = tokenHandler;
+            _secretkey = secretkey;
         }
 
 
@@ -75,17 +79,58 @@ namespace SteamMarketplace.Controller
 
         }
 
+        public string GetJwtClaim(string token, string claim)
+        {
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = "User.authservice",
+                ValidAudiences = new[] { "SteamMarketplace.api" },
+                IssuerSigningKeys = new List<SecurityKey>
+        {
+            _secretkey
+        }
+            };
+
+            SecurityToken validatedToken;
+            var principal = _tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+
+            if (principal == null)
+            {
+                throw new Exception("JWT token validation failed");
+            }
+
+            var data = principal.Claims.FirstOrDefault(x => x.Type == claim);
+
+            if (data == null)
+            {
+                throw new Exception($"Claim '{claim}' not found in the JWT token");
+            }
+
+            return data.Value;
+        }
+
+
+
+
+
         [HttpPost]
         [Route("purchaseItem/{title}")]
         [Authorize]
-
-        public async Task<Response> ItemPurchase(string title, [FromHeader] string authorization)
+        public async Task<Response> ItemPurchase(string title, [FromHeader(Name = "Authorization")] string authorization)
         {
             try
             {
-                var userEmail = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
 
-                var response = await _itemService.ItemPurchase(title, userEmail,  authorization,  HttpContext);
+                string token = authorization.Replace("Bearer ", "");
+
+                var userEmail = GetJwtClaim(token, ClaimTypes.Email);
+
+
+                var response = await _itemService.ItemPurchase(title, userEmail, authorization);
 
                 return new Response
                 {
@@ -106,5 +151,6 @@ namespace SteamMarketplace.Controller
                 };
             }
         }
+
     }
-    }
+}
