@@ -13,6 +13,8 @@ using SteamMarketplace.Services;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Server.IISIntegration;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace SteamMarketplace
 {
@@ -49,16 +51,19 @@ namespace SteamMarketplace
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = "User.authservice",
-                    ValidAudience = "SteamMarketplace.api",
+                    ValidAudiences = new[] { "SteamMarketplace.api" },
                     IssuerSigningKey = secretKey
                 };
             });
 
 
 
+
+
             services.AddSingleton(secretKey);
             services.AddHttpContextAccessor();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddSingleton<JwtSecurityTokenHandler>();
 
 
 
@@ -76,7 +81,11 @@ namespace SteamMarketplace
             services.AddScoped<ItemRepository>();
             services.AddScoped<UserRepository>();
             services.AddScoped<Item, Item>();
-          
+            services.AddScoped<Inventory>();
+
+            services.AddAuthentication(IISDefaults.AuthenticationScheme);
+
+
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new ItemMapper());
